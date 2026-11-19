@@ -64,7 +64,12 @@ def cmd_club(args, cfg):
         cfg.steam_club = [x for x in cfg.steam_club if x.lower() != args.value.lower()]
     elif args.action == "set-sober":
         cfg.sober_club_profile = args.value
-    cfg.save()
+    try:
+        cfg.save()
+    except PermissionError:
+        print(f"error: club settings are managed by the administrator ({cfg.path()}); "
+              "re-run with sudo", file=sys.stderr)
+        return 1
     print(f"Club Steam accounts: {cfg.steam_club or '-'}; club Sober profile: {cfg.sober_club_profile or '-'}")
 
 

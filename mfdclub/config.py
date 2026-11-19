@@ -15,6 +15,10 @@ def data_dir() -> Path:
     return Path(os.environ.get("MFDCLUB_DATA_DIR") or Path.home() / ".local" / "share" / "mfdclub")
 
 
+def system_config_path() -> Path:
+    return Path(os.environ.get("MFDCLUB_SYSTEM_CONFIG") or "/etc/mfdclub/config.json")
+
+
 @dataclass
 class Config:
     # SteamID64 or account login name (case-insensitive) of club Steam accounts.
@@ -24,7 +28,9 @@ class Config:
 
     @staticmethod
     def path() -> Path:
-        return config_dir() / "config.json"
+        """System-wide config (admin-managed) wins over the per-user one."""
+        sys_path = system_config_path()
+        return sys_path if sys_path.is_file() else config_dir() / "config.json"
 
     @classmethod
     def load(cls) -> "Config":

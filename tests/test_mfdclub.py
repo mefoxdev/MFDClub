@@ -37,6 +37,7 @@ class Base(unittest.TestCase):
             "MFDCLUB_DATA_DIR": str(self.tmp / "data"),
             "MFDCLUB_STEAM_DIR": str(self.tmp / "steam"),
             "MFDCLUB_SOBER_DIR": str(self.tmp / "var" / "sober"),
+            "MFDCLUB_SYSTEM_CONFIG": str(self.tmp / "etc" / "config.json"),
         }
         p = mock.patch.dict(os.environ, env)
         p.start()
@@ -117,6 +118,24 @@ class SoberTests(Base):
         for bad in ("", "../x", ".hid", "a/b"):
             with self.assertRaises(sober.SoberError):
                 sober.new(bad)
+
+
+class SystemConfigTests(Base):
+    def test_system_config_wins(self):
+        Config(steam_club=["user_level"]).save()
+        sysp = self.tmp / "etc" / "config.json"
+        sysp.parent.mkdir()
+        sysp.write_text('{"steam_club": ["club_main"], "sober_club_profile": "club"}')
+        cfg = Config.load()
+        self.assertEqual(cfg.steam_club, ["club_main"])
+        self.assertEqual(cfg.sober_club_profile, "club")
+
+    def test_readonly_system_config_blocks_user_edit(self):
+        sysp = self.tmp / "etc" / "config.json"
+        sysp.parent.mkdir()
+        sysp.write_text("{}")
+        sysp.chmod(0o444)
+        self.assertEqual(cli.main(["club", "add-steam", "x"]), 1)
 
 
 class CliTests(Base):

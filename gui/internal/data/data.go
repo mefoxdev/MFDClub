@@ -46,7 +46,12 @@ func soberLive() string {
 
 func LoadConfig() Config {
 	var c Config
-	if b, err := os.ReadFile(filepath.Join(configDir(), "config.json")); err == nil {
+	sys := env("MFDCLUB_SYSTEM_CONFIG", "/etc/mfdclub/config.json")
+	b, err := os.ReadFile(sys) // admin-managed config wins over the per-user one
+	if err != nil {
+		b, err = os.ReadFile(filepath.Join(configDir(), "config.json"))
+	}
+	if err == nil {
 		_ = json.Unmarshal(b, &c)
 	}
 	return c

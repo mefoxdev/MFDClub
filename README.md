@@ -23,6 +23,25 @@ curl -fsSL https://raw.githubusercontent.com/mefoxdev/MFDClub/main/install.sh | 
 
 Options via env: `MFDCLUB_REF` (branch/tag), `MFDCLUB_BIN_DIR`, `MFDCLUB_APP_DIR`.
 
+### Shared PC (admin account + restricted accounts)
+
+Run as the admin; the installer asks which local users may use `mfdclub`, and which
+accounts belong to the club:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/mefoxdev/MFDClub/main/install-system.sh | sudo sh
+# or: wget -qO- https://raw.githubusercontent.com/mefoxdev/MFDClub/main/install-system.sh | sudo sh
+```
+
+Non-interactive: `... | sudo sh -s -- --users elev,bob --club-steam club_login --club-sober club`
+(`--all` for everyone, `--uninstall` to remove, `--dry-run` to preview).
+
+It installs root-owned files to `/opt/mfdclub-app` and `/usr/local/bin/mfdclub`, puts the chosen
+users in the `mfdclub` group (they need to log in again), and writes the club list to
+`/etc/mfdclub/config.json`. That file takes priority over per-user config and only root can edit it
+(`sudo mfdclub club add-steam ...`), so restricted users cannot un-mark club accounts.
+Steam and Sober data stay per user: each user sees and logs out only their own accounts.
+
 ## Usage
 
 ```bash
