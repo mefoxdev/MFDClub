@@ -1,0 +1,17 @@
+[project]
+name = "mfdclub"
+version = "0.1.0"
+description = "List and manage Steam / Sober (Roblox) accounts on this device"
+requires-python = ">=3.10"
+license = "AGPL-3.0-or-later"
+readme = "README.md"
+
+[project.scripts]
+mfdclub = "mfdclub.cli:main"
+
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["mfdclub"]
