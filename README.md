@@ -52,6 +52,16 @@ mfdclub logout                                     # dry run
 mfdclub logout --yes                               # apply (Steam must be closed)
 ```
 
+### Inspecting other users (admin)
+
+```bash
+sudo mfdclub list --user elev     # Steam accounts and Sober profiles of user "elev"
+sudo mfdclub list --all-users     # every regular local user
+```
+
+Read-only; needs permission to read the other user's home (root). The GUI has a "User" dropdown
+for the same purpose (run it with `sudo -E` / as root to see other users).
+
 ### Separate Sober spaces
 
 Sober has no multi-account support. `mfdclub` keeps one data directory per profile

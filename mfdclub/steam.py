@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from . import vdf
+from . import paths
 from .config import Config
 
 
@@ -26,7 +27,7 @@ class SteamAccount:
 def candidate_roots() -> list[Path]:
     if os.environ.get("MFDCLUB_STEAM_DIR"):
         return [Path(os.environ["MFDCLUB_STEAM_DIR"])]
-    h = Path.home()
+    h = paths.home()
     return [
         h / ".local/share/Steam",
         h / ".steam/steam",

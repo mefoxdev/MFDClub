@@ -13,6 +13,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
+from . import paths
 from .config import Config, data_dir
 
 APP_ID = "org.vinegarhq.Sober"
@@ -23,7 +24,7 @@ class SoberError(RuntimeError):
 
 
 def live_dir() -> Path:
-    return Path(os.environ.get("MFDCLUB_SOBER_DIR") or Path.home() / ".var" / "app" / APP_ID)
+    return Path(os.environ.get("MFDCLUB_SOBER_DIR") or paths.home() / ".var" / "app" / APP_ID)
 
 
 def profiles_dir() -> Path:

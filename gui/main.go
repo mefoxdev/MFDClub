@@ -82,8 +82,23 @@ func main() {
 		tabs.Refresh()
 		status.SetText(sum)
 	}
-	refresh()
-	top := container.NewBorder(nil, nil, nil, widget.NewButton("Refresh", refresh), status)
+	me := "(me)"
+	users := append([]string{me}, data.LocalUsers()...)
+	picker := widget.NewSelect(users, func(sel string) {
+		name := sel
+		if sel == me {
+			name = ""
+		}
+		if err := data.SetUser(name); err != nil {
+			status.SetText("error: " + err.Error())
+			return
+		}
+		refresh()
+	})
+	picker.SetSelected(me)
+	refresh() // in case SetSelected did not fire the callback
+	left := container.NewHBox(widget.NewLabel("User:"), picker)
+	top := container.NewBorder(nil, nil, left, widget.NewButton("Refresh", refresh), status)
 	w.SetContent(container.NewBorder(top, nil, nil, nil, tabs))
 	w.ShowAndRun()
 }

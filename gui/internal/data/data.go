@@ -3,6 +3,7 @@ package data
 import (
 	"encoding/json"
 	"os"
+	"os/user"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -34,9 +35,56 @@ func env(name, fallback string) string {
 	return fallback
 }
 
-func home() string { h, _ := os.UserHomeDir(); return h }
+var homeOverride string
 
-func configDir() string { return env("MFDCLUB_CONFIG_DIR", filepath.Join(home(), ".config", "mfdclub")) }
+// SetUser makes all readers look at another local user's files ("" = current user).
+func SetUser(name string) error {
+	if name == "" {
+		homeOverride = ""
+		return nil
+	}
+	u, err := user.Lookup(name)
+	if err != nil {
+		return err
+	}
+	homeOverride = u.HomeDir
+	return nil
+}
+
+func home() string {
+	if homeOverride != "" {
+		return homeOverride
+	}
+	h, _ := os.UserHomeDir()
+	return h
+}
+
+// LocalUsers lists regular login users from /etc/passwd (uid 1000-59999, real shell).
+func LocalUsers() []string {
+	b, err := os.ReadFile("/etc/passwd")
+	if err != nil {
+		return nil
+	}
+	var out []string
+	for _, line := range strings.Split(string(b), "\n") {
+		f := strings.Split(line, ":")
+		if len(f) < 7 {
+			continue
+		}
+		uid, err := strconv.Atoi(f[2])
+		if err != nil || uid < 1000 || uid >= 60000 ||
+			strings.HasSuffix(f[6], "nologin") || strings.HasSuffix(f[6], "false") {
+			continue
+		}
+		out = append(out, f[0])
+	}
+	sort.Strings(out)
+	return out
+}
+
+func configDir() string {
+	return env("MFDCLUB_CONFIG_DIR", filepath.Join(home(), ".config", "mfdclub"))
+}
 func dataDir() string {
 	return env("MFDCLUB_DATA_DIR", filepath.Join(home(), ".local", "share", "mfdclub"))
 }

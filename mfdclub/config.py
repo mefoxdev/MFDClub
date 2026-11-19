@@ -4,15 +4,17 @@ from __future__ import annotations
 import json
 import os
 from dataclasses import dataclass, field
+
+from . import paths
 from pathlib import Path
 
 
 def config_dir() -> Path:
-    return Path(os.environ.get("MFDCLUB_CONFIG_DIR") or Path.home() / ".config" / "mfdclub")
+    return Path(os.environ.get("MFDCLUB_CONFIG_DIR") or paths.home() / ".config" / "mfdclub")
 
 
 def data_dir() -> Path:
-    return Path(os.environ.get("MFDCLUB_DATA_DIR") or Path.home() / ".local" / "share" / "mfdclub")
+    return Path(os.environ.get("MFDCLUB_DATA_DIR") or paths.home() / ".local" / "share" / "mfdclub")
 
 
 def system_config_path() -> Path:

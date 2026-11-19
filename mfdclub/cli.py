@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import sys
 
-from . import __version__, sober, steam
+from . import __version__, paths, sober, steam
 from .config import Config
 
 
@@ -30,9 +30,28 @@ def _print_sober(cfg: Config) -> None:
         print(f"  {n:<20} [{', '.join(tags)}]")
 
 
+def _show(user: str | None) -> None:
+    paths.set_home(paths.home_of(user) if user else None)
+    try:
+        cfg = Config.load()  # per-user config of the inspected user (system config wins)
+        _print_steam(cfg)
+        _print_sober(cfg)
+    except PermissionError as e:
+        print(f"  no access to {e.filename} (run with sudo to inspect other users)")
+    finally:
+        paths.set_home(None)
+
+
 def cmd_list(args, cfg):
-    _print_steam(cfg)
-    _print_sober(cfg)
+    if args.all_users:
+        for u in paths.local_users():
+            print(f"=== {u} ===")
+            _show(u)
+    else:
+        if args.user:
+            paths.home_of(args.user)  # fail early on unknown user
+            print(f"=== {args.user} ===")
+        _show(args.user)
 
 
 def cmd_logout(args, cfg):
@@ -93,7 +112,10 @@ def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="mfdclub", description="Manage Steam/Sober accounts on this device")
     p.add_argument("--version", action="version", version=__version__)
     sub = p.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("list", help="show accounts present on this device").set_defaults(fn=cmd_list)
+    li = sub.add_parser("list", help="show accounts present on this device")
+    li.add_argument("-u", "--user", help="inspect another local user (needs sudo)")
+    li.add_argument("--all-users", action="store_true", help="inspect every local user (needs sudo)")
+    li.set_defaults(fn=cmd_list)
     lo = sub.add_parser("logout", help="log out of every non-club account (dry run unless --yes)")
     lo.add_argument("--yes", action="store_true", help="actually do it")
     lo.set_defaults(fn=cmd_logout)
@@ -115,6 +137,9 @@ def main(argv=None) -> int:
         return 2
     try:
         return args.fn(args, Config.load()) or 0
+    except LookupError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 1
     except sober.SoberError as e:
         print(f"error: {e}", file=sys.stderr)
         return 1

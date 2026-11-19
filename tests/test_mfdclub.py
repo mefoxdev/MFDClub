@@ -138,6 +138,29 @@ class SystemConfigTests(Base):
         self.assertEqual(cli.main(["club", "add-steam", "x"]), 1)
 
 
+class OtherUserTests(Base):
+    def test_list_other_user_home(self):
+        import io
+        from contextlib import redirect_stdout
+        home = self.tmp / "home" / "elev"
+        (home / ".local/share/Steam/config").mkdir(parents=True)
+        (home / ".local/share/Steam/config/loginusers.vdf").write_text(SAMPLE)
+        env = {k: v for k, v in os.environ.items() if k != "MFDCLUB_STEAM_DIR"}
+        with mock.patch.dict(os.environ, env, clear=True), \
+                mock.patch("mfdclub.paths.home_of", return_value=home):
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                self.assertEqual(cli.main(["list", "--user", "elev"]), 0)
+        out = buf.getvalue()
+        self.assertIn("=== elev ===", out)
+        self.assertIn("personal", out)
+        from mfdclub import paths
+        self.assertIsNone(paths._override)
+
+    def test_unknown_user(self):
+        self.assertEqual(cli.main(["list", "--user", "no_such_user_xyz"]), 1)
+
+
 class CliTests(Base):
     def test_logout_refuses_without_club_config(self):
         self.assertEqual(cli.main(["logout", "--yes"]), 2)
