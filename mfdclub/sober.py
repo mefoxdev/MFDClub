@@ -53,10 +53,14 @@ def _check_name(name: str) -> None:
 
 
 def running() -> bool:
-    if shutil.which("flatpak") is None:
-        return False
-    r = subprocess.run(["flatpak", "ps", "--columns=application"], capture_output=True, text=True)
-    return APP_ID in r.stdout
+    """Is Sober running for the user we act as? (flatpak ps, then a process-table fallback)"""
+    if shutil.which("flatpak") is not None:
+        r = subprocess.run(["flatpak", "ps", "--columns=application"], capture_output=True, text=True)
+        if APP_ID in r.stdout:
+            return True
+    r = subprocess.run(["pgrep", "-u", str(os.geteuid()), "-f", APP_ID.replace(".", r"\.")],
+                       capture_output=True)
+    return r.returncode == 0
 
 
 def _has_data(p: Path) -> bool:

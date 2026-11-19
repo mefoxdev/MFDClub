@@ -52,15 +52,31 @@ mfdclub logout                                     # dry run
 mfdclub logout --yes                               # apply (Steam must be closed)
 ```
 
-### Inspecting other users (admin)
+### Administering other users (admin)
 
 ```bash
 sudo mfdclub list --user elev     # Steam accounts and Sober profiles of user "elev"
 sudo mfdclub list --all-users     # every regular local user
 ```
 
-Read-only; needs permission to read the other user's home (root). The GUI has a "User" dropdown
-for the same purpose (run it with `sudo -E` / as root to see other users).
+`--user NAME` (before or after the command) works with every command, as root:
+
+```bash
+sudo mfdclub --user elev logout            # dry run for elev's accounts
+sudo mfdclub --user elev logout --yes
+sudo mfdclub --user elev sober init club   # also: sober new/use/list
+sudo mfdclub --user elev club show
+sudo mfdclub club --system add-steam club_login   # machine-wide club list (all users), /etc/mfdclub
+sudo mfdclub club --system set-sober club
+```
+
+Mutating commands drop privileges to the target user, so files keep the right owner and nothing is
+created as root in their home. Steam/Sober "running" checks look at that user's processes only.
+`sober run` is not available for another user (it launches a GUI in their own session).
+`list` is read-only and does not change identity.
+
+The GUI has a "User" dropdown and a "Log out non-club…" button (shows a dry run, asks, then applies) that
+calls the CLI. Run it as root (`sudo -E ./mfdclub-gui`) to manage other users.
 
 ### Separate Sober spaces
 

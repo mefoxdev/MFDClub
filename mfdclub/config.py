@@ -35,15 +35,15 @@ class Config:
         return sys_path if sys_path.is_file() else config_dir() / "config.json"
 
     @classmethod
-    def load(cls) -> "Config":
+    def load(cls, path: Path | None = None) -> "Config":
         try:
-            raw = json.loads(cls.path().read_text())
+            raw = json.loads((path or cls.path()).read_text())
         except FileNotFoundError:
             return cls()
         return cls(list(raw.get("steam_club", [])), raw.get("sober_club_profile"))
 
-    def save(self) -> None:
-        p = self.path()
+    def save(self, path: Path | None = None) -> None:
+        p = path or self.path()
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(json.dumps(
             {"steam_club": self.steam_club, "sober_club_profile": self.sober_club_profile},

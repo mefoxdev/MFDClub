@@ -3,10 +3,12 @@ package main
 
 import (
 	"fmt"
+	"os/exec"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/mefoxdev/MFDClub/gui/internal/data"
@@ -62,6 +64,17 @@ func build() (steam, sober fyne.CanvasObject, summary string) {
 	return steam, sober, fmt.Sprintf("Steam: %d · Sober profiles: %d", len(acc), len(prof))
 }
 
+// runCLI shells out to the mfdclub CLI so GUI and CLI share one implementation.
+func runCLI(user string, args ...string) (string, error) {
+	var full []string
+	if user != "" {
+		full = append(full, "--user", user)
+	}
+	full = append(full, args...)
+	out, err := exec.Command("mfdclub", full...).CombinedOutput()
+	return string(out), err
+}
+
 func main() {
 	a := app.New()
 	w := a.NewWindow("MFDClub")
@@ -84,11 +97,13 @@ func main() {
 	}
 	me := "(me)"
 	users := append([]string{me}, data.LocalUsers()...)
+	selected := ""
 	picker := widget.NewSelect(users, func(sel string) {
 		name := sel
 		if sel == me {
 			name = ""
 		}
+		selected = name
 		if err := data.SetUser(name); err != nil {
 			status.SetText("error: " + err.Error())
 			return
@@ -97,8 +112,28 @@ func main() {
 	})
 	picker.SetSelected(me)
 	refresh() // in case SetSelected did not fire the callback
+	logout := widget.NewButton("Log out non-club…", func() {
+		preview, err := runCLI(selected, "logout") // dry run
+		if err != nil {
+			dialog.ShowError(fmt.Errorf("%v\n%s", err, preview), w)
+			return
+		}
+		dialog.ShowConfirm("Log out non-club accounts?", preview+"\nApply now?", func(ok bool) {
+			if !ok {
+				return
+			}
+			out, err := runCLI(selected, "logout", "--yes")
+			if err != nil {
+				dialog.ShowError(fmt.Errorf("%v\n%s", err, out), w)
+			} else {
+				dialog.ShowInformation("Done", out, w)
+			}
+			refresh()
+		}, w)
+	})
 	left := container.NewHBox(widget.NewLabel("User:"), picker)
-	top := container.NewBorder(nil, nil, left, widget.NewButton("Refresh", refresh), status)
+	right := container.NewHBox(logout, widget.NewButton("Refresh", refresh))
+	top := container.NewBorder(nil, nil, left, right, status)
 	w.SetContent(container.NewBorder(top, nil, nil, nil, tabs))
 	w.ShowAndRun()
 }

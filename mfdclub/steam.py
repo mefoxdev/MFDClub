@@ -66,7 +66,7 @@ def list_accounts(cfg: Config, path: Path | None = None) -> list[SteamAccount]:
 
 def steam_running() -> bool:
     for name in ("steam", "steamwebhelper"):
-        if subprocess.run(["pgrep", "-x", name], capture_output=True).returncode == 0:
+        if subprocess.run(["pgrep", "-u", str(os.geteuid()), "-x", name], capture_output=True).returncode == 0:
             return True
     return False
 

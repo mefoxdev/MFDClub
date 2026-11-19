@@ -161,6 +161,42 @@ class OtherUserTests(Base):
         self.assertEqual(cli.main(["list", "--user", "no_such_user_xyz"]), 1)
 
 
+class AdminTests(Base):
+    def test_become_requires_root_for_other_user(self):
+        import pwd
+        other = next((p.pw_name for p in pwd.getpwall() if p.pw_uid != os.geteuid()), None)
+        if other is None or os.geteuid() == 0:
+            self.skipTest("needs a different existing user and a non-root caller")
+        self.assertEqual(cli.main(["--user", other, "logout"]), 1)
+
+    def test_user_option_for_self_runs_command(self):
+        import getpass
+        Config(steam_club=["club_main"]).save()
+        # same uid -> no privilege change; dry run touches nothing
+        self.assertEqual(cli.main(["--user", getpass.getuser(), "logout"]), 0)
+        self.assertEqual(self.vdf_path.read_text(), SAMPLE)
+
+    def test_club_system_needs_root(self):
+        self.assertEqual(cli.main(["club", "--system", "add-steam", "x"]), 1)
+
+    def test_club_system_writes_machine_config(self):
+        with mock.patch("mfdclub.cli.os.geteuid", return_value=0):
+            self.assertEqual(cli.main(["club", "--system", "add-steam", "club_main"]), 0)
+            self.assertEqual(cli.main(["club", "--system", "set-sober", "club"]), 0)
+        cfg = Config.load(self.tmp / "etc" / "config.json")
+        self.assertEqual((cfg.steam_club, cfg.sober_club_profile), (["club_main"], "club"))
+
+    def test_sober_run_for_other_user_refused(self):
+        import getpass
+        self.assertEqual(cli.main(["--user", getpass.getuser(), "sober", "run"]), 1)
+
+    def test_club_show_and_clear(self):
+        Config(steam_club=["a"], sober_club_profile="club").save()
+        self.assertEqual(cli.main(["club", "show"]), 0)
+        cli.main(["club", "clear-sober"])
+        self.assertIsNone(Config.load().sober_club_profile)
+
+
 class CliTests(Base):
     def test_logout_refuses_without_club_config(self):
         self.assertEqual(cli.main(["logout", "--yes"]), 2)
