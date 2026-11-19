@@ -4,7 +4,24 @@ CLI to see which Steam and Roblox (Sober) accounts are present on this device,
 log out of everything that is not a club account, and keep a separate Sober
 "space" for personal play without touching the club session.
 
-Python 3.10+, no dependencies. Run `python -m mfdclub ...` or `pip install -e .` for `mfdclub`.
+Python 3.10+, no dependencies.
+
+## Install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/mefoxdev/MFDClub/main/install.sh | sh
+# or
+wget -qO- https://raw.githubusercontent.com/mefoxdev/MFDClub/main/install.sh | sh
+```
+
+Installs to `~/.local/share/mfdclub-app` with a launcher in `~/.local/bin/mfdclub`.
+Re-run the same command to update. Uninstall (config and data are kept):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/mefoxdev/MFDClub/main/install.sh | sh -s -- --uninstall
+```
+
+Options via env: `MFDCLUB_REF` (branch/tag), `MFDCLUB_BIN_DIR`, `MFDCLUB_APP_DIR`.
 
 ## Usage
 
