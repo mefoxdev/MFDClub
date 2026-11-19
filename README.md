@@ -46,6 +46,19 @@ mfdclub sober run me        # switch to "me" and launch Sober (log in there)
 mfdclub sober run club      # back to the club session, still logged in
 ```
 
+## GUI (Fyne, read-only)
+
+`gui/` is a small Go/Fyne window with two tabs: Steam accounts and Sober profiles
+(club accounts are marked). It reads the same files and config as the CLI; use the
+CLI to change anything.
+
+```bash
+# Debian/Ubuntu build deps: sudo apt install golang gcc libgl1-mesa-dev xorg-dev
+cd gui && go build -o mfdclub-gui . && ./mfdclub-gui
+```
+
+Tests run without a display: `cd gui && go test -tags ci ./...`.
+
 ## What it does and does not do
 
 - **Steam**: reads `config/loginusers.vdf` (native and Flatpak Steam). Logout removes non-club
